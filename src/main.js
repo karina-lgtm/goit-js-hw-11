@@ -1,34 +1,29 @@
-import { fetchImages } from './pixabay-api';
-import { renderImages, showLoader, hideLoader, showErrorMessage } from './render-functions';
-import iziToast from 'izitoast';
-import 'izitoast/dist/css/iziToast.min.css';
+import fetchImages from './js/pickabay-api';
+import { hideLoader, renderImages, showLoader, showMessage } from './js/render-functions';
 
-const form = document.querySelector('.search-form');
-const input = form.querySelector('input[name="query"]');
+const form = document.querySelector('form');
+const input = document.querySelector('#search-text');
 
-form.addEventListener('submit', async (e) => {
+form.addEventListener('submit', handleSubmit);
+
+function handleSubmit(e) {
   e.preventDefault();
-  const query = input.value.trim();
 
-  if (query === '') {
-    iziToast.warning({
-      title: 'Warning',
-      message: 'Please enter a search query.',
-    });
-    return;
-  }
+  const searchText = input.value;
 
-  showLoader();
-  try {
-    const images = await fetchImages(query);
-    if (images.length === 0) {
-      showErrorMessage();
-    } else {
-      renderImages(images);
-    }
-  } catch (error) {
-    console.error('Error:', error);
-  } finally {
-    hideLoader();
-  }
-});
+  if (!searchText) return;
+
+  input.value = '';
+
+  showLoader()
+
+  fetchImages(searchText)
+    .then(data => handleSearchResults(data.data.hits))
+    .catch(err => console.log(err));
+}
+
+function handleSearchResults(images) {
+  if (!images.length) showMessage();
+
+  renderImages(images);
+}
